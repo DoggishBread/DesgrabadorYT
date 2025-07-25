@@ -1,0 +1,10 @@
+# Ignorar carpeta de audios temporales
+/backend/audio/
+
+# Ignorar archivos temporales o de sistema
+__pycache__/
+*.pyc
+*.pyo
+*.log
+.DS_Store
+.env
