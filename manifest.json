@@ -1,0 +1,8 @@
+{
+  "name": "Desgrabador de YouTube",
+  "short_name": "Desgrabador",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#007BFF"
+}
