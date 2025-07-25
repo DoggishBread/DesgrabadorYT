@@ -102,7 +102,8 @@ def transcribir():
             headers=HEADERS
         ).text
 
-        os.remove(audio_path)
+        if os.remove(audio_path):
+            os.remove(audio_path)
         return jsonify({"transcripcion": srt_text})
 
     except Exception as e:
