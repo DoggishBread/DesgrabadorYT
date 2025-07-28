@@ -84,12 +84,13 @@ copyBtn.addEventListener("click", () => {
 });
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () =>
-    navigator.serviceWorker
-      .register('service-worker.js')
-      .then(() => console.log('Service Worker registrado'))
-      .catch(err => console.log('Fallo al registrar SW:', err))
-  );
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(reg => {console.log('Service Worker registrado:', reg.scope);
+      })
+      .catch(err => {console.error('Fallo al registrar SW:', err);
+    });
+  });
 }
 
 function parseSrt(srt) {
