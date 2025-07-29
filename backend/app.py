@@ -141,6 +141,14 @@ def transcribir():
         code = 400 if isinstance(e, DownloadError) else 500
         return jsonify(error=str(e)), code
 
+@app.route("/_nettest")
+def nettest():
+    import requests
+    try:
+        r = requests.get("https://www.youtube.com/", timeout=5)
+        return f"HEAD https://youtube.com → {r.status_code}"
+    except Exception as e:
+        return f"ERROR: {e}"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
