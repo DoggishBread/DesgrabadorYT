@@ -37,10 +37,7 @@ def download_with_yt_dlp(url: str) -> str:
             "preferredcodec": "mp3",
             "preferredquality": "192"
         }],
-        "quiet": False,
-        "no_warnings": False,
         "geo_bypass": True,
-        "geo_bypass_country": "US",
         "force_ipv4": True,
         "source_address": "0.0.0.0",
         "http_headers": {
@@ -51,13 +48,10 @@ def download_with_yt_dlp(url: str) -> str:
             ),
             "Accept-Language": "en-US,en;q=0.9"
         },
-        "force_generic_extractor": True
-    }
-    if COOKIE_FILE and os.path.isfile(COOKIE_FILE):
-        opts["cookiefile"] = COOKIE_FILE
+        "force_generic_extractor": True,
 
+    }
     with yt_dlp.YoutubeDL(opts) as ydl:
-        ydl.add_default_info_extractors()
         info = ydl.extract_info(url, download=True)
         return os.path.join(AUDIO_FOLDER, f"{info['id']}.mp3")
 
