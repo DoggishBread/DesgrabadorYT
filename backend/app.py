@@ -28,26 +28,38 @@ CORS(app)
 def serve(path):
     return send_from_directory(FRONTEND_DIR, path)
 
-
 def download_with_yt_dlp(url: str) -> str:
     opts = {
         "format": "bestaudio/best",
         "outtmpl": os.path.join(AUDIO_FOLDER, "%(id)s.%(ext)s"),
         "postprocessors": [{
             "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3", "preferredquality": "192"
+            "preferredcodec": "mp3",
+            "preferredquality": "192"
         }],
-        "quiet": True, "no_warnings": True,
-        "geo_bypass": True, "geo_bypass_country": "US",
-        "source_address": "0.0.0.0"
+        "quiet": False,
+        "no_warnings": False,
+        "geo_bypass": True,
+        "geo_bypass_country": "US",
+        "force_ipv4": True,
+        "source_address": "0.0.0.0",
+        "http_headers": {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/115.0.0.0 Safari/537.36"
+            ),
+            "Accept-Language": "en-US,en;q=0.9"
+        },
+        "force_generic_extractor": True
     }
     if COOKIE_FILE and os.path.isfile(COOKIE_FILE):
         opts["cookiefile"] = COOKIE_FILE
 
     with yt_dlp.YoutubeDL(opts) as ydl:
+        ydl.add_default_info_extractors()
         info = ydl.extract_info(url, download=True)
         return os.path.join(AUDIO_FOLDER, f"{info['id']}.mp3")
-
 
 def download_with_pytube(url: str) -> str:
     """
