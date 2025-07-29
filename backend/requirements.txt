@@ -4,5 +4,5 @@ requests==2.31.0
 pytube==15.0.0
 deep-translator==1.11.4
 gunicorn==23.0.0
-yt-dlp==2024.04.09
+yt-dlp>=2025.07.29
 python-dotenv==1.0.1
