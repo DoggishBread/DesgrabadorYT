@@ -1,7 +1,7 @@
 Flask==3.1.1
 Flask-Cors==6.0.1
 requests==2.31.0
-pytube==15.0.0
+pytube
 deep-translator==1.11.4
 gunicorn==23.0.0
 yt-dlp

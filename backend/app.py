@@ -3,6 +3,7 @@ import time
 import traceback
 import requests
 import yt_dlp
+import re
 
 from yt_dlp.utils import DownloadError
 from pytube import YouTube
@@ -73,16 +74,41 @@ def download_with_pytube(url: str) -> str:
     os.remove(mp4_path)
     return mp3_path
 
-
 def download_audio_from_youtube(url: str) -> str:
+    """
+    1) yt-dlp directo
+    2) Invidious mirrors
+    3) pytube fallback
+    """
     try:
-        print("Intentando descargar con yt_dlp…")
+        print("🔍 Probando con yt_dlp:", url)
         return download_with_yt_dlp(url)
-    except DownloadError as de:
-        print("yt_dlp falló:", de)
-        print("Probando con pytube…")
-        return download_with_pytube(url)
+    except DownloadError as e1:
+        print("yt_dlp falló:", e1)
 
+    invidious_hosts = [
+        "yewtu.be",
+        "yewtu.eu.org",
+        "yewtu.snopyta.org"
+    ]
+    for host in invidious_hosts:
+        alt = re.sub(
+            r"https?://(www\.)?youtube\.com/watch",
+            f"https://{host}/watch",
+            url
+        )
+        try:
+            print("🔄 Probando Invidious:", alt)
+            return download_with_yt_dlp(alt)
+        except DownloadError as e2:
+            print(f"Invidious {host} falló:", e2)
+
+    try:
+        print("🎯 Intentando fallback con pytube")
+        return download_with_pytube(url)
+    except Exception as e3:
+        print("pytube falló:", e3)
+        raise DownloadError(f"No se pudo descargar el video por ningún método.")
 
 def upload_to_assemblyai(path: str) -> str:
     with open(path, "rb") as f:
