@@ -1,4 +1,5 @@
 import os
+import base64
 import time
 import traceback
 import requests
@@ -20,6 +21,23 @@ BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(BASE_DIR, os.pardir, "frontend")
 AUDIO_FOLDER = os.path.join(BASE_DIR, "audio")
 os.makedirs(AUDIO_FOLDER, exist_ok=True)
+
+B64 = os.getenv("YTDLP_COOKIE_B64", "")
+if B64:
+    path = os.path.join(BASE_DIR, "cookies.txt")
+    with open(path, "wb") as f:
+        f.write(base64.b64decode(B64))
+    COOKIE_FILE = path
+    print("→ Cookiefile escrito desde B64 en:", COOKIE_FILE)
+
+print(">>> COOKIE_FILE path:", COOKIE_FILE)
+print(">>> Existe en disco? ", os.path.isfile(COOKIE_FILE))
+if os.path.isfile(COOKIE_FILE):
+    size = os.path.getsize(COOKIE_FILE)
+    print(f">>> Tamaño cookies: {size} bytes")
+    with open(COOKIE_FILE, "r", errors="ignore") as f:
+        lines = f.readlines()
+        print(">>> Primeras 3 líneas de cookies:\n", "".join(lines[:3]))
 
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
 CORS(app)
@@ -51,6 +69,7 @@ def download_with_yt_dlp(url: str) -> str:
         },
         "force_generic_extractor": True,
 
+        "cookiefile": COOKIE_FILE,
     }
     with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(url, download=True)
@@ -81,7 +100,7 @@ def download_audio_from_youtube(url: str) -> str:
     3) pytube fallback
     """
     try:
-        print("🔍 Probando con yt_dlp:", url)
+        print("Probando con yt_dlp:", url)
         return download_with_yt_dlp(url)
     except DownloadError as e1:
         print("yt_dlp falló:", e1)
@@ -104,11 +123,11 @@ def download_audio_from_youtube(url: str) -> str:
             print(f"Invidious {host} falló:", e2)
 
     try:
-        print("🎯 Intentando fallback con pytube")
+        print("Intentando fallback con pytube")
         return download_with_pytube(url)
     except Exception as e3:
         print("pytube falló:", e3)
-        raise DownloadError(f"No se pudo descargar el video por ningún método.")
+        raise DownloadError("No se pudo descargar el video por ningún método.")
 
 def upload_to_assemblyai(path: str) -> str:
     with open(path, "rb") as f:
@@ -119,7 +138,6 @@ def upload_to_assemblyai(path: str) -> str:
     if not url:
         raise RuntimeError(f"No upload_url: {r.text}")
     return url
-
 
 def start_transcription(audio_url: str, lang: str) -> str:
     payload = {"audio_url": audio_url}
@@ -133,7 +151,6 @@ def start_transcription(audio_url: str, lang: str) -> str:
         raise RuntimeError(f"No se obtuvo ID: {r.text}")
     return tid
 
-
 def wait_for_transcript(tid: str) -> dict:
     url = f"https://api.assemblyai.com/v2/transcript/{tid}"
     while True:
@@ -143,7 +160,6 @@ def wait_for_transcript(tid: str) -> dict:
         if r.get("status") == "error":
             raise RuntimeError(r.get("error"))
         time.sleep(3)
-
 
 @app.route("/transcribir", methods=["POST"])
 def transcribir():
@@ -155,7 +171,7 @@ def transcribir():
         if not vid:
             return jsonify(error="Falta la URL de YouTube."), 400
 
-        audio = download_audio_from_youtube(vid)
+        audio      = download_audio_from_youtube(vid)
         upload_url = upload_to_assemblyai(audio)
         tid        = start_transcription(upload_url, lang)
         wait_for_transcript(tid)
@@ -163,8 +179,10 @@ def transcribir():
         srt = requests.get(f"https://api.assemblyai.com/v2/transcript/{tid}/srt",
                            headers=HEADERS).text
 
-        try: os.remove(audio)
-        except: pass
+        try:
+            os.remove(audio)
+        except:
+            pass
 
         return jsonify(transcripcion=srt)
 
@@ -175,7 +193,6 @@ def transcribir():
 
 @app.route("/_nettest")
 def nettest():
-    import requests
     try:
         r = requests.get("https://www.youtube.com/", timeout=5)
         return f"HEAD https://youtube.com → {r.status_code}"
@@ -183,6 +200,6 @@ def nettest():
         return f"ERROR: {e}"
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port  = int(os.environ.get("PORT", 5000))
     debug = os.environ.get("FLASK_DEBUG", "").lower() == "true"
     app.run("0.0.0.0", port=port, debug=debug)
