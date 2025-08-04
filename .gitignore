@@ -1,10 +1,18 @@
-# Ignorar carpeta de audios temporales
-/backend/audio/
-
-# Ignorar archivos temporales o de sistema
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+*.pyd
+*.sqlite3
+
+# Entornos virtuales
+venv/
+.env
+.env.*
+
+cookies.txt
+audio/
+
 *.log
 .DS_Store
-.env
+.vscode/
