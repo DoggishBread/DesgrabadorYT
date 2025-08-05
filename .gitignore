@@ -16,3 +16,6 @@ audio/
 *.log
 .DS_Store
 .vscode/
+
+# Ignorar todos los .webm
+*.webm
